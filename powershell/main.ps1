@@ -62,7 +62,7 @@ if ($alias.Length -eq 0) {
 	exit
 }
 
-if ($networkAclSshRdp -or $allFixes) {
+if ($networkAclSshRdp) {
 	$networkAcls = aws ec2 describe-network-acls
 	$networkAcls = ConvertFrom-Json($networkAcls -join "")
 	$networkAcls = $networkAcls.NetworkAcls
@@ -89,7 +89,7 @@ if ($networkAclSshRdp -or $allFixes) {
 	}
 }
 
-if ($createServiceControlPolicy -or $allFixes) {
+if ($createServiceControlPolicy) {
 	
 	$policies = aws organizations list-policies --filter SERVICE_CONTROL_POLICY
 	$policies = ConvertFrom-Json($policies -join "")
