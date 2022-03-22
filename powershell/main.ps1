@@ -1,4 +1,7 @@
 param(
+	[Alias("cv")]
+    [switch] $removeCongfigVersioning = $false,
+	
 	[Alias("na")]
     [switch] $networkAclSshRdp = $false,
 	
@@ -62,6 +65,25 @@ if ($alias.Length -eq 0) {
 	exit
 }
 
+if ($removeCongfigVersioning -or $allFixes) {
+	$buckets = aws s3api list-buckets
+	$buckets = ConvertFrom-Json($buckets -join "")
+	$buckets = $buckets.Buckets
+	
+	$buckets | Foreach-Object {
+		if ($_.Name -like 'config-bucket*') {
+			aws s3api put-bucket-versioning --bucket $_.Name --versioning-configuration Status=Suspended
+			Write-Host("Suspended versioning.")
+			return
+		}
+	}
+	
+	if($allFixes -eq $false) {
+		exit
+	}
+}
+Start-Sleep 1
+
 if ($networkAclSshRdp) {
 	$networkAcls = aws ec2 describe-network-acls
 	$networkAcls = ConvertFrom-Json($networkAcls -join "")
@@ -88,6 +110,7 @@ if ($networkAclSshRdp) {
 		exit
 	}
 }
+Start-Sleep 1
 
 if ($createServiceControlPolicy) {
 	
@@ -217,7 +240,7 @@ if ($createServiceControlPolicy) {
 		exit
 	}
 }
-
+Start-Sleep 1
 
 # Do not honor all fixes - force explicit use
 if ($deleteLegacy) {
